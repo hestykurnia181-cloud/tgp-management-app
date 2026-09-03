@@ -30,16 +30,17 @@ jobs:
       with:
         gradle-version: '9.3.1'
 
-    - name: Prepare Keystore and Env
+    - name: Fix Gradle Properties
       run: |
         touch .env
+        sed -i 's/kotlin.compiler.execution.strategy=in-process/kotlin.compiler.execution.strategy=daemon/g' gradle.properties || true
         if [ ! -f debug.keystore ]; then
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
         fi
 
     - name: Build APK with Gradle
       run: |
-        gradle assembleDebug --no-daemon
+        gradle assembleDebug -Dkotlin.compiler.execution.strategy=daemon --stacktrace
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
